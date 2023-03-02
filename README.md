@@ -3,7 +3,7 @@
     Kurssi:       Linux-palvelimet
     Linkki:       https://terokarvinen.com/2023/linux-palvelimet-2023-alkukevat/
 
-cd pub	## a) 10:40
+## a) klo: 10:40
 Päivitetään tiedot paketeista apt-get update komennolla.
 
     sudo apt-get update
@@ -115,6 +115,133 @@ Ongelman korjaamiseksi varmasti voitaisiin poistaa aiempi projekti, mutta harjoi
 Nyt voimme kokeilla ajaa virheen aiheuttaneen komennon uudelleen.
 
 	django-admin startproject jepico
+	
+Edelleen tulee sama virhe, joten vaihdetaan projektin nimeä.
+
+	django-admin startproject jepi
+	
+Onnistui, oletan että joku onglema tiedosto polun kanssa mahdollisesti. Toisaalta oma ajatus oli että kyseessä on ongelma projektin nimen kanssa, koska projekti nimeltä sivuco tosiaan oli jo olemassa.
+
+klo: 12.40
+
+Päivitetään .conf tiedostoa
+
+	sudoedit /etc/apache2/sites-available/jepico.conf
+	
+Käytetään editoinnin pohjana https://terokarvinen.com/2022/deploy-django/ sivulla olevaa pohjaa. TUSER on käyttäjäsi, TDIR tulee luotu django projekti, TWSGI django projekti ja TENV env kansio. 
+
+	Define TDIR /home/jesser/publicwsgi/jepi
+	Define TWSGI /home/tero/publicwsgi/jepi/jepi/wsgi.py
+	Define TUSER jesser
+	Define TVENV /home/jesser/publicwsgi/env/lib/python3.9/site-packages
+	# See https://terokarvinen.com/2022/deploy-django/
+	<VirtualHost *:80>
+       		Alias /static/ ${TDIR}/static/
+        	<Directory ${TDIR}/static/>
+                	Require all granted
+        	</Directory>
+       		WSGIDaemonProcess ${TUSER} user=${TUSER} group=${TUSER} threads=5 python-path="${TDIR}:${TVENV}"
+        	WSGIScriptAlias / ${TWSGI}
+       		<Directory ${TDIR}>
+             		WSGIProcessGroup ${TUSER}
+             		WSGIApplicationGroup %{GLOBAL}
+            		WSGIScriptReloading On
+             		<Files wsgi.py>
+               			Require all granted
+             		</Files>
+        	</Directory>
+	</VirtualHost>
+	Undefine TDIR
+	Undefine TWSGI
+	Undefine TUSER
+	Undefine TVENV
+
+![confkuve](https://user-images.githubusercontent.com/112503770/222408803-2e31483c-0659-42ac-82d7-e8a30bc95b3a.png)
+
+Ajetaan asennuskomento jotta saadaa projekti ymmärtämään wsgi komentoja.
+
+	sudo apt-get -y install libapache2-mod-wsgi-py3
+	
+Testataan ilmenikö ongelmia
+	
+	/sbin/apache2ctl configtest
+	
+![syntax ok](https://user-images.githubusercontent.com/112503770/222409374-bd9ffded-bb36-4508-a30c-a9155114738e.png)
+	
+Syntaksi ok, joten voidaan jatkaa käynnistämällä apache uudelleen.
+
+	sudo systemctl restart apache2
+	
+Nyt voimme kokeilla toimiiko asennus menemällä http:/localhost/ osoitteeseen.
+
+![henloworl](https://user-images.githubusercontent.com/112503770/222409816-878799c4-dd96-494a-9fd5-b8bfd60197a2.png)
+
+Hurraa! asennus on onnistunut.
+
+klo: 13:00
+
+Nyt teemme vielä viimeistelyt projektille käymme poistamassa virheidenetsintätilan (debug).
+
+	cd
+	cd publicwsgi/jepi/jepi
+	micro settings.py
+
+Käymme muokkaamassa muutamaa riviä:
+	
+	DEBUG = False
+	ALLOWED_HOSTS = ["localhost"]
+	
+Nyt voimme ajaa päivitys komennot.
+
+	touch jepi/wsgi.py
+	sudo systemctl restart apache2
+
+Nyt huomaamme, että http:/localhost/ antaa virheviestin.
+
+![not foon](https://user-images.githubusercontent.com/112503770/222412391-0f511c6f-daa2-4914-8e13-9c32ce47873b.png)
+
+Toisaalta voimme navigoida http:/localhost/admin/, ja se antaa kirjautumis vaihtoehdon.
+
+![keerjautuminen](https://user-images.githubusercontent.com/112503770/222412736-2df27a83-d00f-4060-87c7-69ce3015c5f4.png)
+
+Kirjautumisen kokeilemiseksi voimme ajaa komennot:
+
+	cd publicwsgi
+	cd jepi
+	./manage.py makemigrations
+	./manage.py migrate
+	./manage.py createsuperuser
+
+Voimme nyt koikeilla kirjautumista, joka toimii hyvin ks. kuva.
+
+![kirjautustoimii](https://user-images.githubusercontent.com/112503770/222413686-81960eaf-fba4-4ef8-96a8-8a3ae2dcdbc8.png)
+
+klo: 13:17
+
+Laitetaan vielä tyylitiedostot toimimaan, jotta käyttäjäkokemus paranee.
+
+	cd publicwsgi
+	cd jepi/jepi/
+	micro settings.py
+
+Lisätään muutama rivi:
+
+	import os
+	STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+	
+![importti](https://user-images.githubusercontent.com/112503770/222414947-4d86d726-0a98-492c-8a18-c5857b690b4c.png)![stati root](https://user-images.githubusercontent.com/112503770/222414958-bd858722-f5ec-422d-9680-22098f0eb968.png)
+
+Nyt voimme ajaa komennon:
+	
+	./manage.py collectstatic
+
+![collect static](https://user-images.githubusercontent.com/112503770/222415332-0eed5f37-5130-4b81-bb1d-4cb21523eeac.png)
+
+Avaamalla http:/localhost/admin/ nyt voimme nähdä tyylit toiminnassa.
+
+![tyylitoimii](https://user-images.githubusercontent.com/112503770/222415666-85804e93-0e48-45bd-b33d-9e3dbbad7988.png)
+
+Lopetus: klo 13:26
 
 ## Lähteet:
 
