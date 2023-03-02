@@ -38,6 +38,18 @@ Luodaan .conf tiedosto sivulle
     
 ![conffitietoo](https://user-images.githubusercontent.com/112503770/222385967-db06674a-a93e-431e-b4c2-ccebf9b5d1d8.png)
 
+Otetaan sivu käyttöön a2aensite komennolla. Otetaan oletus-sivu pois käytöstä a2dissite komennolla. Lopuksi käynnistetään apache2 uudelleen, jotta muutokset tulevat näkyviin.
+
+	sudo a2ensite sivuco.conf
+	sudo a2dissite 000-default.conf 
+	sudo systemctl restart apache2
+
+timestamp: 11:35
+
+Tarkistetaan, että sivusto toimii kirjoittamalla http://localhost/static/ osoitteeksi selaimeen. Varmistukseksi ajan vielä `curl` komennon:
+
+![sivutoimii](https://user-images.githubusercontent.com/112503770/222390312-f4eb9632-33bc-4b19-8eae-8a2fdeaa4262.png)
+
 
 ## Lähteet:
 
