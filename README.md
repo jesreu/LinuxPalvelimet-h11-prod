@@ -120,7 +120,7 @@ Edelleen tulee sama virhe, joten vaihdetaan projektin nimeä.
 
 	django-admin startproject jepi
 	
-Onnistui, oletan että joku onglema tiedosto polun kanssa mahdollisesti. Toisaalta oma ajatus oli että kyseessä on ongelma projektin nimen kanssa, koska projekti nimeltä sivuco tosiaan oli jo olemassa.
+Nyt onnistui. Oletan, että joku onglema tiedostopolun kanssa mahdollisesti. Toisaalta ajatukseni oli, että kyseessä on ongelma nimen kanssa, koska projekti nimeltä sivuco oli jo olemassa.
 
 klo: 12.40
 
