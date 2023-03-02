@@ -3,7 +3,7 @@
     Kurssi:       Linux-palvelimet
     Linkki:       https://terokarvinen.com/2023/linux-palvelimet-2023-alkukevat/
 
-## a) 10:40
+cd pub	## a) 10:40
 Päivitetään tiedot paketeista apt-get update komennolla.
 
     sudo apt-get update
@@ -90,9 +90,32 @@ Huomaamme, että kirjoittajan tapauksessa kyseinen nimi on jo käytössä, joten
 
 ![rojektikaytos](https://user-images.githubusercontent.com/112503770/222395605-48733083-a336-4ba9-9ee5-9984ecfef523.png)
 
-Korjaukset:
+Ongelman korjaamiseksi varmasti voitaisiin poistaa aiempi projekti, mutta harjoittelun kannalta voi olla parempi käydä muokkaamssa tässä raportissa luotuja tiedostoja. Lista ajetuista komennoista ja # kertoo tarkemmin mitä tapahtuu.
 
-	
+	cd								#navigointia
+	cd publicwsgi/
+	mv sivuco/ jepico/						#vaihtaa kansion nimen.
+	sudoedit /etc/apache2/sites-available/sivuco.conf		#päivitetään .conf tiedosto
+	<VirtualHost *:80>
+	      Alias /static/ /home/jesser/publicwsgi/jepico/static/
+	      <Directory /home/jesser/publicwsgi/jepico/static/>
+		      Require all granted
+	      </Directory>
+     	</VirtualHost>
+	cd /etc/apache2/sites-available/				#navigointia
+	sudo mv sivuco.conf jepico.conf					#tiedoston nimen vaihto
+	cat jepico.conf						 	#testausta
+	sudo a2dissite sivuco.conf					#apachen asetukset
+	sudo a2ensite jepico.conf
+	sudo systemctl restart apache2
+	curl http://localhost/static/					#testi (onnistui)
+	cd publicwsgi/							#palataan virhettä edeltävään tilanteeseen
+	source env/bin/activate
+		
+Nyt voimme kokeilla ajaa virheen aiheuttaneen komennon uudelleen.
+
+	django-admin startproject jepico
+
 ## Lähteet:
 
     https://terokarvinen.com/2023/linux-palvelimet-2023-alkukevat/
